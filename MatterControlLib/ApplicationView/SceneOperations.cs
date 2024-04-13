@@ -47,6 +47,7 @@ using MatterHackers.MatterControl.PartPreviewWindow;
 using MatterHackers.MatterControl.PartPreviewWindow.View3D;
 using MatterHackers.VectorMath;
 using MatterControlLib.PartPreviewWindow.View3D.GeometryNodes;
+using Matter_CAD_Lib.DesignTools.Obsolete;
 
 [assembly: InternalsVisibleTo("MatterControl.Tests")]
 [assembly: InternalsVisibleTo("MatterControl.AutomationTests")]
@@ -71,27 +72,22 @@ namespace MatterHackers.MatterControl
 			return new SceneOperation("AddBase")
 			{
 				TitleGetter = () => "Add Base".Localize(),
-				ResultType = typeof(BaseObject3D),
+				ResultType = typeof(BaseObject3D_2),
 				Action = (sceneContext) =>
 				{
 					var scene = sceneContext.Scene;
 					var item = scene.SelectedItem;
 
 					var newChild = item.DeepCopy();
-					var baseMesh = new BaseObject3D()
-					{
-						Matrix = newChild.Matrix
-					};
-					newChild.Matrix = Matrix4X4.Identity;
-					baseMesh.Children.Add(newChild);
-					baseMesh.Invalidate(InvalidateType.Properties);
+					var baseObject = new BaseObject3D_2();
+                    baseObject.AddSelectionAsChildren(sceneContext.Scene, sceneContext.Scene.SelectedItem);
 
 					scene.UndoBuffer.AddAndDo(
 						new ReplaceCommand(
 							new List<IObject3D> { item },
-							new List<IObject3D> { baseMesh }));
+							new List<IObject3D> { baseObject }));
 
-					scene.SelectedItem = baseMesh;
+					scene.SelectedItem = baseObject;
 				},
 				Icon = (theme) => StaticData.Instance.LoadIcon("add_base.png", 16, 16).GrayToColor(theme.TextColor).SetPreMultiply(),
 				HelpTextGetter = () => "A path must be selected".Localize().Stars(),
@@ -290,6 +286,7 @@ namespace MatterHackers.MatterControl
 					var extrude = new LinearExtrudeObject3D();
 					extrude.Children.Add(smooth);
 
+					// this is explicitly using the old BaseObject3D as image converter has a dependency on it
 					var baseObject = new BaseObject3D()
 					{
 						BaseType = BaseTypes.None

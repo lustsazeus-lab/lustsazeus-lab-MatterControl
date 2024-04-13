@@ -208,8 +208,13 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 			}
 		}
 
-		public static void DrawPath(this IObject3D item)
+		public static void DrawPath(this IObject3D item, Color color = default)
 		{
+			if (color == default)
+			{
+                color = Color.Red;
+            }
+
 			var pathItem = item as IPathProvider;
 			if (pathItem?.GetRawPath() != null)
 			{
@@ -231,7 +236,7 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 						GL.Disable(EnableCap.Blend);
 
 						GL.Begin(BeginMode.Lines);
-						GL.Color4(255, 0, 0, 255);
+						GL.Color4(color.Red0To255, color.Green0To255, color.Blue0To255, color.Alpha0To255);
 					}
 
 					if (vertex.IsMoveTo)

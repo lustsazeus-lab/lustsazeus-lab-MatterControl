@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2018, Lars Brubaker, John Lewin
+Copyright (c) 2024, Lars Brubaker, John Lewin
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using ClipperLib;
-using Matter_CAD_Lib.DesignTools.Objects3D;
 using Matter_CAD_Lib.DesignTools.Interfaces;
-using MatterControlLib.DesignTools.Operations.Path;
 using MatterHackers.Agg.Transform;
 using MatterHackers.Agg.UI;
 using MatterHackers.Agg.VertexSource;
@@ -46,27 +44,17 @@ using MatterHackers.MatterControl;
 using MatterHackers.MatterControl.DesignTools;
 using MatterHackers.MatterControl.DesignTools.Operations;
 using MatterHackers.MatterControl.PartPreviewWindow;
-using MatterHackers.PolygonMesh.Csg;
 using MatterHackers.PolygonMesh.Processors;
-using MatterHackers.RenderOpenGl;
-using MatterHackers.RenderOpenGl.OpenGl;
 using MatterHackers.VectorMath;
 using Newtonsoft.Json;
 using Polygon = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Polygons = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
+using Matter_CAD_Lib.DesignTools.Obsolete;
+using MatterHackers.Agg;
 
 namespace Matter_CAD_Lib.DesignTools.Objects3D
 {
-    public enum BaseTypes
-    {
-        None,
-        Rectangle,
-        Circle,
-        /* Oval, Frame,*/
-        Outline
-    }
-
-    public class BaseObject3D : PathObject3DAbstract, IPropertyGridModifier, IEditorDraw
+    public class BaseObject3D_2 : OperationSourceContainerObject3D, IPropertyGridModifier, IEditorDraw, IPathProvider
     {
         public enum CenteringTypes
         {
@@ -76,7 +64,7 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
 
         private readonly double scalingForClipper = 1000;
 
-        public BaseObject3D()
+        public BaseObject3D_2()
         {
             Name = "Base".Localize();
         }
@@ -85,9 +73,6 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
 
         [EnumDisplay(Mode = EnumDisplayAttribute.PresentationMode.Tabs)]
         public BaseTypes BaseType { get; set; } = BaseTypes.Circle;
-
-        [Description("The height the base will be derived from (starting at the bottom).")]
-        public DoubleOrExpression CalculationHeight { get; set; } = .1;
 
         [DisplayName("Expand")]
         [Slider(0, 30, Easing.EaseType.Quadratic, snapDistance: .5)]
@@ -99,29 +84,17 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
         [EnumDisplay(Mode = EnumDisplayAttribute.PresentationMode.Buttons)]
         public ExpandStyles Style { get; set; } = ExpandStyles.Round;
 
-        [DisplayName("Height")]
-        [Slider(1, 50, Easing.EaseType.Quadratic, useSnappingGrid: true)]
-        public DoubleOrExpression ExtrusionHeight { get; set; } = 5;
-
         [JsonIgnore]
         [DisplayName("")]
         [ReadOnly(true)]
         public string NoBaseMessage { get; set; } = "No base is added under your part. Switch to a different base option to create a base.";
 
-        [JsonIgnore]
-        [DisplayName("")]
-        [ReadOnly(true)]
-        public string SpaceHolder1 { get; set; } = "";
-
-        [JsonIgnore]
-        [DisplayName("")]
-        [ReadOnly(true)]
-        public string SpaceHolder2 { get; set; } = "";
-
         [EnumDisplay(Mode = EnumDisplayAttribute.PresentationMode.Buttons)]
         public CenteringTypes Centering { get; set; } = CenteringTypes.Weighted;
 
-        public override bool MeshIsSolidObject => true;
+        public bool MeshIsSolidObject => false;
+
+        public VertexStorage VertexStorage { get; set; }
 
         public override void Cancel(UndoBuffer undoBuffer)
         {
@@ -144,45 +117,14 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
             base.Cancel(undoBuffer);
         }
 
-        private double cacheHeight;
-
-        public override IVertexSource GetRawPath()
+        public IVertexSource GetRawPath()
         {
-            var paths = this.CombinedVisibleChildrenPaths();
-            if (paths == null)
-            {
-                var calculationHeight = CalculationHeight.Value(this);
-                if (VertexStorage == null || cacheHeight != calculationHeight)
-                {
-                    var aabb = this.GetAxisAlignedBoundingBox();
-                    var cutPlane = new Plane(Vector3.UnitZ, new Vector3(0, 0, aabb.MinXYZ.Z + calculationHeight));
-                    VertexStorage = new VertexStorage(GetSlicePaths(this, cutPlane));
-                    cacheHeight = calculationHeight;
-                }
-
-                return VertexStorage;
-            }
-
-            return paths;
+            return VertexStorage;
         }
 
-        public static IVertexSource GetSlicePaths(IObject3D source, Plane plane)
+        public static async Task<BaseObject3D_2> Create()
         {
-            var totalSlice = new Polygons();
-            foreach (var item in source.VisibleMeshes())
-            {
-                var cutPlane = Plane.Transform(plane, item.WorldMatrix(source).Inverted);
-                // return the vertex source of the bottom of the mesh
-                var slice = SliceLayer.CreateSlice(item.Mesh, cutPlane);
-                totalSlice = totalSlice.Union(slice);
-            }
-
-            return totalSlice.CreateVertexStorage();
-        }
-
-        public static async Task<BaseObject3D> Create()
-        {
-            var item = new BaseObject3D();
+            var item = new BaseObject3D_2();
             await item.Rebuild();
             return item;
         }
@@ -227,22 +169,16 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
                 {
                     using (new CenterAndHeightMaintainer(this, MaintainFlags.Bottom))
                     {
-                        var firstChild = Children.FirstOrDefault();
-
-                        // remove the base mesh we added
-                        Children.Modify(list =>
-                        {
-                            list.Clear();
-                            // add back in the sourceContainer
-                            list.Add(firstChild);
-                        });
+                        RemoveAllButSource();
+                        SourceContainer.Visible = true;
 
                         // and create the base
                         var vertexSource = this.CombinedVisibleChildrenPaths();
 
                         // Convert VertexSource into expected Polygons
                         Polygons polygonShape = vertexSource == null ? null : vertexSource.CreatePolygons();
-                        GenerateBase(polygonShape, firstChild.GetAxisAlignedBoundingBox().MinXYZ.Z);
+                        GenerateBase(polygonShape);
+                        SourceContainer.Visible = false;
                     }
 
                     UiThread.RunOnIdle(() =>
@@ -359,7 +295,7 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
             return boundingCircle;
         }
 
-        public void GenerateBase(Polygons polygonShape, double bottomWithoutBase)
+        public void GenerateBase(Polygons polygonShape)
         {
             if (polygonShape != null
                 && polygonShape.Select(p => p.Count).Sum() > 3)
@@ -387,7 +323,6 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
 
                     var infillAmount = InfillAmount.Value(this);
                     var baseSize = BaseSize.Value(this);
-                    var extrusionHeight = ExtrusionHeight.Value(this);
                     var joinType = InflatePathObject3D.GetJoinType(Style);
                     if (BaseType == BaseTypes.Outline
                         && infillAmount > 0)
@@ -404,15 +339,9 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
 
                     VertexStorage rawVectorShape = basePolygons.PolygonToPathStorage();
                     var vectorShape = new VertexSourceApplyTransform(rawVectorShape, Affine.NewScaling(1.0 / scalingForClipper));
+                    VertexStorage = new VertexStorage(vectorShape);
 
-                    var mesh = vectorShape.Extrude(zHeightTop: extrusionHeight);
-                    mesh.Translate(new Vector3(0, 0, -extrusionHeight + bottomWithoutBase));
-
-                    var baseObject = new Object3D()
-                    {
-                        Mesh = mesh
-                    };
-                    Children.Add(baseObject);
+                    Mesh = VertexStorage.Extrude(Constants.PathPolygonsHeight);
                 }
                 else
                 {
@@ -429,18 +358,13 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
             changeSet.Clear();
 
             changeSet.Add(nameof(NoBaseMessage), BaseType == BaseTypes.None);
-            changeSet.Add(nameof(SpaceHolder1), BaseType == BaseTypes.None || BaseType == BaseTypes.Rectangle);
-            changeSet.Add(nameof(SpaceHolder2), BaseType == BaseTypes.None);
             changeSet.Add(nameof(BaseSize), BaseType != BaseTypes.None);
             changeSet.Add(nameof(InfillAmount), BaseType == BaseTypes.Outline);
             changeSet.Add(nameof(Centering), BaseType == BaseTypes.Circle);
-            changeSet.Add(nameof(ExtrusionHeight), BaseType != BaseTypes.None);
-            changeSet.Add(nameof(Style), BaseType != BaseTypes.Circle);
+            changeSet.Add(nameof(Style), BaseType == BaseTypes.Outline);
 
             var vertexSource = GetRawPath();
             var meshSource = this.Descendants<IObject3D>().Where((i) => i.Mesh != null);
-
-            changeSet.Add(nameof(CalculationHeight), vertexSource == null && meshSource.Where(m => m.Mesh != null).Any());
 
             // first turn on all the settings we want to see
             foreach (var kvp in changeSet.Where(c => c.Value))
@@ -455,31 +379,16 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
             }
         }
 
-        Matrix4X4 CalcTransform()
-        {
-            var aabb = GetAxisAlignedBoundingBox(this.WorldMatrix());
-            return this.WorldMatrix() * Matrix4X4.CreateTranslation(0, 0, CalculationHeight.Value(this) - aabb.MinXYZ.Z + ExtrusionHeight.Value(this));
-        }
-
         public void DrawEditor(Object3DControlsLayer layer, DrawEventArgs e)
         {
-            if (GetRawPath() != null)
-            {
-                layer.World.RenderPathOutline(CalcTransform(), GetRawPath(), MatterHackers.Agg.Color.Red, 5);
+            this.DrawPath();
 
-                // turn the lighting back on
-                GL.Enable(EnableCap.Lighting);
-            }
+            SourceContainer.Children.First().DrawPath(MatterHackers.Agg.Color.Red.WithAlpha(20));
         }
 
         public AxisAlignedBoundingBox GetEditorWorldspaceAABB(Object3DControlsLayer layer)
         {
-            if (GetRawPath() != null)
-            {
-                // TODO: Untested.
-                return layer.World.GetWorldspaceAabbOfRenderPathOutline(CalcTransform(), GetRawPath(), 5);
-            }
-            return AxisAlignedBoundingBox.Empty();
+            return this.GetWorldspaceAabbOfDrawPath();
         }
     }
 }
