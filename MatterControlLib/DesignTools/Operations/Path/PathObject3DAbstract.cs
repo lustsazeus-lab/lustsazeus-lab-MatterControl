@@ -84,6 +84,7 @@ namespace MatterControlLib.DesignTools.Operations.Path
                 "Revolve",
                 "InflatePath",
                 "OutlinePath",
+                "BorderPath",
                 "SmoothPath"
             });
 

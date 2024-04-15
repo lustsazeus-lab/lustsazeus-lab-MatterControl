@@ -47,7 +47,7 @@ using MatterHackers.VectorMath;
 
 namespace MatterHackers.MatterControl.DesignTools.Operations
 {
-    public class LinearExtrudeObject3D : Object3D, IPrimaryOperationsSpecifier, IPropertyGridModifier, IPathProvider
+    public class LinearExtrudeObject3D : Object3D, IPropertyGridModifier, IPathProvider
     {
         [Description("The height of the extrusion")]
         [Slider(.1, 50, Easing.EaseType.Quadratic, useSnappingGrid: true)]
@@ -192,11 +192,6 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
             change.SetRowVisible(nameof(Radius), () => BevelTop);
             change.SetRowVisible(nameof(Segments), () => BevelTop);
             change.SetRowVisible(nameof(Style), () => BevelTop);
-        }
-
-        public IEnumerable<SceneOperation> GetOperations()
-        {
-            yield return SceneOperations.ById("AddBase");
         }
 
         public IVertexSource GetRawPath()

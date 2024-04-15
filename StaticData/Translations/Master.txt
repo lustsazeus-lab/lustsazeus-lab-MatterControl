@@ -238,6 +238,9 @@ Translated:Add an.stl, .obj, .amf, .gcode or.zip file to the Library
 English:Add Base
 Translated:Add Base
 
+English:Add Border
+Translated:Add Border
+
 English:Add File to Bed
 Translated:Add File to Bed
 
@@ -675,6 +678,12 @@ Translated:Blue Tape
 
 English:Blue Tape Bed Temperature
 Translated:Blue Tape Bed Temperature
+
+English:Border
+Translated:Border
+
+English:Border Path
+Translated:Border Path
 
 English:Bottom Inset
 Translated:Bottom Inset

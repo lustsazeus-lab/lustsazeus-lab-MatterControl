@@ -27,11 +27,6 @@ of the authors and should not be interpreted as representing official policies,
 either expressed or implied, of the FreeBSD Project.
 */
 
-/*********************************************************************/
-/**************************** OBSOLETE! ******************************/
-/************************ USE NEWER VERSION **************************/
-/*********************************************************************/
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -71,7 +66,6 @@ namespace Matter_CAD_Lib.DesignTools.Obsolete
         Outline
     }
 
-    [Obsolete("Use BaseObject3D_2 instead", false)]
     public class BaseObject3D : PathObject3DAbstract, IPropertyGridModifier, IEditorDraw
     {
         public enum CenteringTypes

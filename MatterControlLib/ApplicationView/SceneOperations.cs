@@ -67,19 +67,19 @@ namespace MatterHackers.MatterControl
 
 		private static Dictionary<string, SceneOperation> OperationsById { get; } = new Dictionary<string, SceneOperation>();
 
-		public static SceneOperation AddBaseOperation()
+		public static SceneOperation BorderPathOperation()
 		{
-			return new SceneOperation("AddBase")
+			return new SceneOperation("BorderPath")
 			{
-				TitleGetter = () => "Add Base".Localize(),
-				ResultType = typeof(BaseObject3D_2),
+				TitleGetter = () => "Border Path".Localize(),
+				ResultType = typeof(BorderPathObject3D),
 				Action = (sceneContext) =>
 				{
 					var scene = sceneContext.Scene;
 					var item = scene.SelectedItem;
 
 					var newChild = item.DeepCopy();
-					var baseObject = new BaseObject3D_2();
+					var baseObject = new BorderPathObject3D();
                     baseObject.AddSelectionAsChildren(sceneContext.Scene, sceneContext.Scene.SelectedItem);
 
 					scene.UndoBuffer.AddAndDo(
@@ -89,7 +89,7 @@ namespace MatterHackers.MatterControl
 
 					scene.SelectedItem = baseObject;
 				},
-				Icon = (theme) => StaticData.Instance.LoadIcon("add_base.png", 16, 16).GrayToColor(theme.TextColor).SetPreMultiply(),
+				Icon = (theme) => StaticData.Instance.LoadIcon("border_path.png", 16, 16).GrayToColor(theme.TextColor).SetPreMultiply(),
 				HelpTextGetter = () => "A path must be selected".Localize().Stars(),
 				// this is for when base is working with generic meshes
 				//IsEnabled = (sceneContext) => sceneContext.Scene.SelectedItem != null && !(sceneContext.Scene.SelectedItem.IsPathObject()),
@@ -419,7 +419,7 @@ namespace MatterHackers.MatterControl
             };
         }
         
-		public static SceneOperation LinearExtrudeOperation()
+		public static SceneOperation LinearExtrudePathOperation()
 		{
 			return new SceneOperation("LinearExtrude")
 			{
@@ -450,7 +450,7 @@ namespace MatterHackers.MatterControl
 			};
 		}
 
-		public static SceneOperation RevolveOperation()
+		public static SceneOperation RevolvePathOperation()
 		{
 			return new SceneOperation("Revolve")
 			{
@@ -813,12 +813,12 @@ namespace MatterHackers.MatterControl
 					Visible = OperationGroup.GetVisible("Path", false),
 					Operations = new List<SceneOperation>()
 					{
-						LinearExtrudeOperation(),
-						RevolveOperation(),
+						LinearExtrudePathOperation(),
+						RevolvePathOperation(),
 						SmoothPathOperation(),
 						InflatePathOperation(),
 						OutlinePathOperation(),
-						AddBaseOperation(),
+						BorderPathOperation(),
                         SelectPathsOperation(),
                     }
                 },

@@ -51,11 +51,20 @@ using Polygon = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Polygons = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 using Matter_CAD_Lib.DesignTools.Obsolete;
 using MatterHackers.Agg;
+using MatterControlLib.DesignTools.Operations.Path;
 
 namespace Matter_CAD_Lib.DesignTools.Objects3D
 {
-    public class BaseObject3D_2 : OperationSourceContainerObject3D, IPropertyGridModifier, IEditorDraw, IPathProvider
+    public class BorderPathObject3D : OperationSourceContainerObject3D, IPropertyGridModifier, IEditorDraw, IPathProvider, IPrimaryOperationsSpecifier
     {
+        public enum BaseTypes
+        {
+            Rectangle,
+            Circle,
+            /* Oval, Frame,*/
+            Outline
+        }
+
         public enum CenteringTypes
         {
             Bounds,
@@ -64,15 +73,15 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
 
         private readonly double scalingForClipper = 1000;
 
-        public BaseObject3D_2()
+        public BorderPathObject3D()
         {
-            Name = "Base".Localize();
+            Name = "Border".Localize();
         }
 
         public override bool CanApply => true;
 
         [EnumDisplay(Mode = EnumDisplayAttribute.PresentationMode.Tabs)]
-        public BaseTypes BaseType { get; set; } = BaseTypes.Circle;
+        public BaseTypes BaseType { get; set; } = BaseTypes.Rectangle;
 
         [DisplayName("Expand")]
         [Slider(0, 30, Easing.EaseType.Quadratic, snapDistance: .5)]
@@ -84,17 +93,13 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
         [EnumDisplay(Mode = EnumDisplayAttribute.PresentationMode.Buttons)]
         public ExpandStyles Style { get; set; } = ExpandStyles.Round;
 
-        [JsonIgnore]
-        [DisplayName("")]
-        [ReadOnly(true)]
-        public string NoBaseMessage { get; set; } = "No base is added under your part. Switch to a different base option to create a base.";
 
         [EnumDisplay(Mode = EnumDisplayAttribute.PresentationMode.Buttons)]
         public CenteringTypes Centering { get; set; } = CenteringTypes.Weighted;
 
         public bool MeshIsSolidObject => false;
 
-        public VertexStorage VertexStorage { get; set; }
+        public VertexStorage VertexStorage { get; set; } = new VertexStorage();
 
         public override void Cancel(UndoBuffer undoBuffer)
         {
@@ -122,9 +127,9 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
             return VertexStorage;
         }
 
-        public static async Task<BaseObject3D_2> Create()
+        public static async Task<BorderPathObject3D> Create()
         {
-            var item = new BaseObject3D_2();
+            var item = new BorderPathObject3D();
             await item.Rebuild();
             return item;
         }
@@ -139,7 +144,6 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
                 && !RebuildLocked)
             {
                 // make sure we clear our cache
-                VertexStorage = null;
                 await Rebuild();
             }
             else if (invalidateArgs.InvalidateType.HasFlag(InvalidateType.Properties) && invalidateArgs.Source == this)
@@ -174,10 +178,10 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
 
                         // and create the base
                         var vertexSource = this.CombinedVisibleChildrenPaths();
+                        VertexStorage = new VertexStorage(vertexSource);
 
                         // Convert VertexSource into expected Polygons
-                        Polygons polygonShape = vertexSource == null ? null : vertexSource.CreatePolygons();
-                        GenerateBase(polygonShape);
+                        GenerateBase(VertexStorage.CreatePolygons());
                         SourceContainer.Visible = false;
                     }
 
@@ -357,8 +361,6 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
             var changeSet = new Dictionary<string, bool>();
             changeSet.Clear();
 
-            changeSet.Add(nameof(NoBaseMessage), BaseType == BaseTypes.None);
-            changeSet.Add(nameof(BaseSize), BaseType != BaseTypes.None);
             changeSet.Add(nameof(InfillAmount), BaseType == BaseTypes.Outline);
             changeSet.Add(nameof(Centering), BaseType == BaseTypes.Circle);
             changeSet.Add(nameof(Style), BaseType == BaseTypes.Outline);
@@ -383,12 +385,17 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
         {
             this.DrawPath();
 
-            SourceContainer.Children.First().DrawPath(MatterHackers.Agg.Color.Red.WithAlpha(20));
+            SourceContainer.Children.First().DrawPath(Color.Blue.WithAlpha(20));
         }
 
         public AxisAlignedBoundingBox GetEditorWorldspaceAABB(Object3DControlsLayer layer)
         {
             return this.GetWorldspaceAabbOfDrawPath();
+        }
+
+        public IEnumerable<SceneOperation> GetOperations()
+        {
+            return PathObject3DAbstract.GetOperations(this.GetType());
         }
     }
 }
