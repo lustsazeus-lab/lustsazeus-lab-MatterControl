@@ -240,7 +240,7 @@ namespace MatterHackers.MatterControl
 						&& componentObject.Finalized
 						&& !componentObject.ProOnly;
 				},
-				Icon = (theme) => StaticData.Instance.LoadIcon("scale_32x32.png", 16, 16).GrayToColor(theme.TextColor).SetPreMultiply(),
+				Icon = (theme) => StaticData.Instance.LoadIcon("edit_component.png", 16, 16).GrayToColor(theme.TextColor).SetPreMultiply(),
 				HelpTextGetter = () => "A component must be selected".Localize().Stars(),
 				IsEnabled = (sceneContext) => sceneContext.Scene.SelectedItem != null && (sceneContext.Scene.SelectedItem is IComponentObject3D),
 			};
@@ -518,7 +518,7 @@ namespace MatterHackers.MatterControl
 					scene.UndoBuffer.AddAndDo(new ReplaceCommand(items, new[] { component }));
 					scene.SelectedItem = component;
 				},
-				Icon = (theme) => StaticData.Instance.LoadIcon("component.png", 16, 16).GrayToColor(theme.TextColor).SetPreMultiply(),
+				Icon = (theme) => StaticData.Instance.LoadIcon("make_component.png", 16, 16).GrayToColor(theme.TextColor).SetPreMultiply(),
 				HelpTextGetter = () => "At least 1 part must be selected".Localize().Stars(),
 				IsEnabled = (sceneContext) =>
 				{
