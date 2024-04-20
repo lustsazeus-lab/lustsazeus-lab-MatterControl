@@ -88,7 +88,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="CsvHelper">
-			<Version>31.0.2</Version>
+			<Version>31.0.4</Version>
 		</PackageReference>
 		<PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

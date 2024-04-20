@@ -88,12 +88,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="1.1.1" />
-    <PackageReference Include="CsvHelper" Version="31.0.2" />
+    <PackageReference Include="AngleSharp" Version="1.1.2" />
+    <PackageReference Include="CsvHelper" Version="31.0.4" />
     <PackageReference Include="Lucene.Net" Version="4.8.0-beta00005" />
     <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00005" />
     <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00005" />
-    <PackageReference Include="Markdig" Version="0.35.0" />
+    <PackageReference Include="Markdig" Version="0.37.0" />
     <PackageReference Include="MathParser.org-mXparser" Version="5.2.1" />
     <PackageReference Include="MIConvexHull" Version="1.1.19.1019" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.1" />
