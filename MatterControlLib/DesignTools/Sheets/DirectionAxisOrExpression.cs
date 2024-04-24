@@ -27,19 +27,21 @@ of the authors and should not be interpreted as representing official policies,
 either expressed or implied, of the FreeBSD Project.
 */
 
+using System;
 using System.ComponentModel;
 using System.Linq;
 using Matter_CAD_Lib.DesignTools.Interfaces;
+using MatterHackers.MatterControl.DesignTools.EditableTypes;
 using MatterHackers.VectorMath;
 
 namespace MatterHackers.MatterControl.DesignTools
 {
-    [TypeConverter(typeof(Vector3OrExpression))]
-    public class Vector3OrExpression : DirectOrExpression
+    [TypeConverter(typeof(DirectionAxisOrExpression))]
+    public class DirectionAxisOrExpression : DirectOrExpression
     {
-        public Vector3 Value(IObject3D owner)
+        public DirectionAxis Value(IObject3D owner)
         {
-            var value = Expressions.EvaluateExpression<Vector3>(owner, Expression);
+            var value = Expressions.EvaluateExpression<DirectionAxis>(owner, Expression);
             if (owner.RebuildLocked)
             {
                 ExpressionValueAtLastRebuild = value.ToString();
@@ -48,8 +50,9 @@ namespace MatterHackers.MatterControl.DesignTools
             return value;
         }
 
-        public static Vector3 Parse(IObject3D owner, string inputExpression)
+        public static DirectionAxis Parse(IObject3D owner, string inputExpression)
         {
+            throw new NotImplementedException();
             var resultVector = Vector3.Zero;
 
             var components = ExtractComponents(inputExpression);
@@ -61,7 +64,7 @@ namespace MatterHackers.MatterControl.DesignTools
                 resultVector.Z = Expressions.EvaluateExpression<double>(owner, components[2]);
             }
 
-            return resultVector;
+            //return resultVector;
         }
 
         public static string[] ExtractComponents(string inputExpression)
@@ -79,24 +82,24 @@ namespace MatterHackers.MatterControl.DesignTools
             return new string[0];
         }
 
-        public Vector3OrExpression(Vector3 value)
+        public DirectionAxisOrExpression(Vector3 value)
         {
             Expression = value.ToString();
         }
 
-        public Vector3OrExpression(string expression)
+        public DirectionAxisOrExpression(string expression)
         {
             Expression = expression;
         }
 
-        public static implicit operator Vector3OrExpression(Vector3 value)
+        public static implicit operator DirectionAxisOrExpression(Vector3 value)
         {
-            return new Vector3OrExpression(value);
+            return new DirectionAxisOrExpression(value);
         }
 
-        public static implicit operator Vector3OrExpression(string expression)
+        public static implicit operator DirectionAxisOrExpression(string expression)
         {
-            return new Vector3OrExpression(expression);
+            return new DirectionAxisOrExpression(expression);
         }
     }
 }

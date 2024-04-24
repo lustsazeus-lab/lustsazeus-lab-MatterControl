@@ -37,7 +37,7 @@ using MatterHackers.MatterControl.SlicerConfiguration;
 
 namespace Matter_CAD_Lib.DesignTools.PropertyEditors
 {
-    public class Vector3OrExpressionPropertyEditor : IPropertyEditorFactory
+    public class DirectionAxisOrExpressionPropertyEditor : IPropertyEditorFactory
     {
         public static void Register()
         {

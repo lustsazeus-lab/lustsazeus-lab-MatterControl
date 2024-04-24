@@ -88,10 +88,13 @@ namespace MatterHackers.MatterControl.DesignTools
 
         static PropertyEditor()
         {
+            // enumerate 
+
             SelectedChildrenPropertyEditor.Register();
             StringPropertyEditor.Register();
             DoubleOrExpressionPropertyEditor.Register();
             Vector3OrExpressionPropertyEditor.Register();
+            DirectionAxisOrExpressionPropertyEditor.Register();
         }
 
         public PropertyEditor(ThemeConfig theme, UndoBuffer undoBuffer)

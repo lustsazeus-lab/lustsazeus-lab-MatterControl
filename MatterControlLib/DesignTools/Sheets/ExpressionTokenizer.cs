@@ -36,12 +36,18 @@ namespace Matter_CAD_Lib.DesignTools.Sheets
 {
     public static class ExpressionTokenizer
     {
+        public static TextParser<TextSpan> Decimal { get; } = Numerics.Integer.Then((TextSpan n) => 
+            from f in Character.EqualTo('.')
+                .IgnoreThen(Numerics.Natural)
+                .OptionalOrDefault()
+                select (!(f == TextSpan.None)) ? new TextSpan(n.Source, n.Position, n.Length + f.Length + 1) : n);
+
         private static Tokenizer<ExpressionTokenType> tokenizer = new TokenizerBuilder<ExpressionTokenType>()
             .Match(Character.EqualTo('+'), ExpressionTokenType.Plus)
             .Match(Character.EqualTo('-'), ExpressionTokenType.Minus)
             .Match(Character.EqualTo('*'), ExpressionTokenType.Times)
             .Match(Character.EqualTo('/'), ExpressionTokenType.Divide)
-            .Match(Numerics.Decimal, ExpressionTokenType.Number)
+            .Match(Decimal, ExpressionTokenType.Number)
             .Match(Character.EqualTo('<').IgnoreThen(Character.EqualTo('=')), ExpressionTokenType.LessThanOrEqual)
             .Match(Character.EqualTo('<'), ExpressionTokenType.LessThan)
             .Match(Character.EqualTo('>').IgnoreThen(Character.EqualTo('=')), ExpressionTokenType.GreaterThanOrEqual)

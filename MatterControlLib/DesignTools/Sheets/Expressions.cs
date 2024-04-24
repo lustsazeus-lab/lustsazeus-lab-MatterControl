@@ -32,6 +32,7 @@ using Matter_CAD_Lib.DesignTools.Objects3D;
 using Matter_CAD_Lib.DesignTools.Sheets;
 using MatterHackers.Agg;
 using MatterHackers.Agg.UI;
+using MatterHackers.MatterControl.DesignTools.EditableTypes;
 using MatterHackers.MatterControl.DesignTools.Operations;
 using MatterHackers.VectorMath;
 using System;
@@ -131,9 +132,14 @@ namespace MatterHackers.MatterControl.DesignTools
             if (typeof(T) == typeof(Vector3))
             {
                 // This can parse a Vector3 from a string like "[1,2,3]" or a DoubleOrExpression that has formula in it.
-                return (T)(object)Vector3OrExpression.ParseVector(owner, inExpression);
+                return (T)(object)Vector3OrExpression.Parse(owner, inExpression);
             }
-            
+
+            if (typeof(T) == typeof(DirectionAxis))
+            {
+                return (T)(object)DirectionAxisOrExpression.Parse(owner, inExpression);
+            }
+
             // check if the expression is an equation (starts with "=")
             if (inputExpression.Length > 0 && inputExpression[0] == '=')
             {
