@@ -47,13 +47,6 @@ namespace Matter_CAD_Lib.DesignTools.Sheets
             {
                 ranTests = true;
 
-                RunTest("Radius", "3", new List<(string, string)>() { ("Radius", "3") });
-                RunTest("1+1", "2");
-                RunTest(" 1 + 1 ", "2");
-                RunTest("1.1 + 2.3", "3.4");
-                RunTest("concat(\"test\", \"this\")", "testthis");
-                RunTest("concat(\"test \", 6/3)", "test 2");
-                RunTest("3+5*(5-3)", "13");
                 // positive numbers
                 RunTest("1", "1");
                 RunTest("1+1", "2");
@@ -66,14 +59,20 @@ namespace Matter_CAD_Lib.DesignTools.Sheets
                 RunTest("-(1+2)", "-3");
                 // multiplication
                 RunTest("4*5", "20");
+                RunTest("3+5*(5-3)", "13");
                 // division
                 RunTest("6/2", "3");
                 // order of operations
                 RunTest("(1+2)*3", "9");
                 // decimal numbers
+                RunTest("0.1", "0.1");
+                RunTest(".1", "0.1");
                 RunTest("1.1 + 2.3", "3.4");
                 RunTest("1.1 + 2 * 3", "7.1");
+                RunTest("20+.4", "20.4");
                 // string concat
+                RunTest("concat(\"test\", \"this\")", "testthis");
+                RunTest("concat(\"test \", 6/3)", "test 2");
                 RunTest("concat(\"foo\", \"bar\")", "foobar");
                 RunTest("ConCat(\"foo\", \"bar\")", "foobar");
                 RunTest("concat(3 + 5, 2 + 3)", "85");
@@ -133,6 +132,12 @@ namespace Matter_CAD_Lib.DesignTools.Sheets
                         ("margin", "2")
                     });
                 // test with constants
+                RunTest("Radius",
+                    "3",
+                    new List<(string, string)>()
+                    {
+                        ("Radius", "3")
+                    });
                 RunTest("A1+Radius",
                     "5",
                     new List<(string, string)>()

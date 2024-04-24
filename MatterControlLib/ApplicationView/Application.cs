@@ -258,6 +258,15 @@ namespace MatterHackers.MatterControl
 							keyEvent.SuppressKeyPress = true;
 							break;
 
+						case Keys.T:
+							if (keyEvent.Control)
+							{
+                                ApplicationController.Instance.MainView.CreateNewDesignTab(true);
+                                keyEvent.Handled = true;
+								keyEvent.SuppressKeyPress = true;
+                            }
+							break;
+
 						case Keys.Escape:
 							if (view3D.CurrentSelectInfo.DownOnPart)
 							{

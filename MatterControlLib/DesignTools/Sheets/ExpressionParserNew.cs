@@ -109,8 +109,17 @@ namespace Matter_CAD_Lib.DesignTools.Sheets
                             return (decimal.Parse(left, CultureInfo.InvariantCulture) + decimal.Parse(right, CultureInfo.InvariantCulture)).ToString(CultureInfo.InvariantCulture);
                         }
                         else
-                        { // This is a true subtraction operation
-                            return (decimal.Parse(left, CultureInfo.InvariantCulture) - decimal.Parse(right, CultureInfo.InvariantCulture)).ToString(CultureInfo.InvariantCulture);
+                        {
+                            // This is a true subtraction operation
+                            if(decimal.TryParse(left, out decimal leftNum))
+                            {
+                                if (decimal.TryParse(right, out decimal rightNum))
+                                {
+                                    return (leftNum - rightNum).ToString(CultureInfo.InvariantCulture);
+                                }
+                            }
+
+                            return "0";
                         }
                     });
 

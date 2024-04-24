@@ -28,6 +28,8 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 using System;
+using Matter_CAD_Lib.DesignTools.Interfaces;
+using Matter_CAD_Lib.DesignTools.Objects3D;
 using MatterHackers.Agg;
 using MatterHackers.MatterControl.DesignTools.EditableTypes;
 using MatterHackers.RenderOpenGl;
@@ -38,20 +40,22 @@ namespace MatterHackers.MeshVisualizer
 {
 	public static class WorldViewExtensions
 	{
-		public static void RenderDirectionAxis(this WorldView world, DirectionAxis axis, Matrix4X4 matrix, double size)
+		public static void RenderDirectionAxis(this WorldView world, DirectionAxis axis, IObject3D owner, double size)
 		{
 			GLHelper.PrepareFor3DLineRender(true);
 
 			Frustum frustum = world.GetClippingFrustum();
 			Vector3 length = axis.Normal * size;
-			var color = Agg.Color.Red;
+			var color = Color.Red;
+            var origin = axis.Origin;
+            var matrix = owner.WorldMatrix();
 
-			// draw center line
-			{
-				var min = axis.Origin - length;
+            // draw center line
+            {
+                var min = origin - length;
 				Vector3 start = Vector3Ex.Transform(min, matrix);
 
-				var max = axis.Origin + length;
+				var max = origin + length;
 				Vector3 end = Vector3Ex.Transform(max, matrix);
 
 				world.Render3DLineNoPrep(frustum, start, end, color, 1);
@@ -63,12 +67,12 @@ namespace MatterHackers.MeshVisualizer
 			bool first = true;
 			var firstEnd = Vector3.Zero;
 			var lastEnd = Vector3.Zero;
-			var center = Vector3Ex.Transform(axis.Origin, matrix);
+			var center = Vector3Ex.Transform(origin, matrix);
 			for (int i = 0; i < count; i++)
 			{
 				var rotation = size / 4 * Vector3Ex.Transform(perpendicular, Matrix4X4.CreateRotation(axis.Normal, MathHelper.Tau * i / count));
 				// draw center line
-				var max = axis.Origin + rotation;
+				var max = origin + rotation;
 				Vector3 end = Vector3Ex.Transform(max, matrix);
 
 				world.Render3DLineNoPrep(frustum, center, end, color, 1);
@@ -90,10 +94,12 @@ namespace MatterHackers.MeshVisualizer
 			GL.Enable(EnableCap.Lighting);
 		}
 
-		public static AxisAlignedBoundingBox GetWorldspaceAabbOfRenderDirectionAxis(DirectionAxis axis, Matrix4X4 matrix, double size)
+		public static AxisAlignedBoundingBox GetWorldspaceAabbOfRenderDirectionAxis(DirectionAxis axis, IObject3D owner, double size)
 		{
 			double radius = axis.Normal.Length * size;
-			return AxisAlignedBoundingBox.CenteredHalfExtents(new Vector3(radius, radius, radius), axis.Origin).NewTransformed(matrix);
+            var matrix = owner.WorldMatrix();
+            var origin = axis.Origin;
+			return AxisAlignedBoundingBox.CenteredHalfExtents(new Vector3(radius, radius, radius), origin).NewTransformed(matrix);
 		}
 	}
 }

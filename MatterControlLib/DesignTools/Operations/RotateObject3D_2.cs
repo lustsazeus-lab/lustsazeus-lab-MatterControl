@@ -105,9 +105,10 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 			get
 			{
 				var angleRadians = MathHelper.DegreesToRadians(AngleDegrees.Value(this));
-				var rotation = Matrix4X4.CreateTranslation(-RotateAbout.Origin)
+				var origin = RotateAbout.Origin;
+				var rotation = Matrix4X4.CreateTranslation(-origin)
 					* Matrix4X4.CreateRotation(RotateAbout.Normal, angleRadians)
-					* Matrix4X4.CreateTranslation(RotateAbout.Origin);
+					* Matrix4X4.CreateTranslation(origin);
 
 				return rotation;
 			}
@@ -118,7 +119,7 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 			if (layer.Scene.SelectedItem != null
 				&& layer.Scene.SelectedItem.DescendantsAndSelf().Where((i) => i == this).Any())
 			{
-				layer.World.RenderDirectionAxis(RotateAbout, this.WorldMatrix(), 30);
+				layer.World.RenderDirectionAxis(RotateAbout, this, 30);
 			}
 		}
 
@@ -127,7 +128,7 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 			if (layer.Scene.SelectedItem != null
 				&& layer.Scene.SelectedItem.DescendantsAndSelf().Where((i) => i == this).Any())
 			{
-				return WorldViewExtensions.GetWorldspaceAabbOfRenderDirectionAxis(RotateAbout, this.WorldMatrix(), 30);
+				return WorldViewExtensions.GetWorldspaceAabbOfRenderDirectionAxis(RotateAbout, this, 30);
 			}
 
 			return AxisAlignedBoundingBox.Empty();

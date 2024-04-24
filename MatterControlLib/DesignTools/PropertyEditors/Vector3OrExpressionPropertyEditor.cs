@@ -99,7 +99,7 @@ namespace Matter_CAD_Lib.DesignTools.PropertyEditors
 
                     void RefreshField(object s, InvalidateArgs e)
                     {
-                        // This code only executes when the in scene controls are updating the objects data and the display needs to tack them.
+                        // This code only executes when the in scene controls are updating the objects data and the display needs to track them.
                         if (e.InvalidateType.HasFlag(InvalidateType.DisplayValues))
                         {
                             var newValue = (Vector3OrExpression)property.Value;

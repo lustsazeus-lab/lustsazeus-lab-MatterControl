@@ -62,11 +62,13 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 
 		public override async Task Rebuild()
 		{
-			// check if we have initialized the Axis
-			if (Axis.Origin.X == double.NegativeInfinity)
+            var origin = Axis.Origin;
+            // check if we have initialized the Axis
+            if (origin.X == double.NegativeInfinity)
 			{
 				// make it something reasonable (just to the left of the aabb of the object)
-				Axis.Origin = this.GetAxisAlignedBoundingBox().Center - new Vector3(-30, 0, 0);
+				origin = this.GetAxisAlignedBoundingBox().Center - new Vector3(-30, 0, 0);
+				Axis.Origin = origin;
 			}
 
 			var rebuildLock = this.RebuildLock();
@@ -100,7 +102,7 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 
 							var normal = Axis.Normal.GetNormal();
 							var angleRadians = MathHelper.Tau / count * i;
-							next.Rotate(Axis.Origin, normal, angleRadians);
+							next.Rotate(origin, normal, angleRadians);
 
 							if (!RotatePart)
 							{
@@ -108,7 +110,7 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 								next.Rotate(nextAabb.Center, normal, -angleRadians);
 							}
 
-							next.Matrix *= Matrix4X4.CreateTranslation(-Axis.Origin);
+							next.Matrix *= Matrix4X4.CreateTranslation(-origin);
 
 							list.Add(next);
 						}
@@ -116,7 +118,7 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 
 					if (firstBuild)
                     {
-						this.Matrix *= Matrix4X4.CreateTranslation(Axis.Origin);
+						this.Matrix *= Matrix4X4.CreateTranslation(origin);
 					}
 
                     SourceContainer.Visible = false; 
@@ -134,12 +136,12 @@ namespace MatterHackers.MatterControl.DesignTools.Operations
 
 		public void DrawEditor(Object3DControlsLayer layer, DrawEventArgs e)
 		{
-			layer.World.RenderDirectionAxis(new DirectionAxis() { Normal = Axis.Normal, Origin = Vector3.Zero }, this.WorldMatrix(), 30);
+			layer.World.RenderDirectionAxis(new DirectionAxis() { Normal = Axis.Normal, Origin = Vector3.Zero }, this, 30);
 		}
 
 		public AxisAlignedBoundingBox GetEditorWorldspaceAABB(Object3DControlsLayer layer)
 		{
-			return WorldViewExtensions.GetWorldspaceAabbOfRenderDirectionAxis(new DirectionAxis() { Normal = Axis.Normal, Origin = Vector3.Zero }, this.WorldMatrix(), 30);
+			return WorldViewExtensions.GetWorldspaceAabbOfRenderDirectionAxis(new DirectionAxis() { Normal = Axis.Normal, Origin = Vector3.Zero }, this, 30);
 		}
 	}
 }
