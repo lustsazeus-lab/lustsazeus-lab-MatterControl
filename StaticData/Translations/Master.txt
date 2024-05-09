@@ -838,6 +838,9 @@ Translated:Change Password
 English:Change the current rendering mode
 Translated:Change the current rendering mode
 
+English:Change Value
+Translated:Change Value
+
 English:Changing Height
 Translated:Changing Height
 
@@ -1210,6 +1213,9 @@ Translated:Create
 English:Create a printer to export G-Code
 Translated:Create a printer to export G-Code
 
+English:Create a sku in the backend for this item.
+Translated:Create a sku in the backend for this item.
+
 English:Create a Sku plate for this sku.
 Translated:Create a Sku plate for this sku.
 
@@ -1248,6 +1254,9 @@ Translated:Create Raft
 
 English:Create Skirt
 Translated:Create Skirt
+
+English:Create Sku
+Translated:Create Sku
 
 English:Create Sku Plate
 Translated:Create Sku Plate

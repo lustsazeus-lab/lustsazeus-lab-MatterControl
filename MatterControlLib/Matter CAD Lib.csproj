@@ -65,6 +65,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\MHDataLab\C Sharp Tools\MhUtil\MhUtil.csproj" />
     <ProjectReference Include="..\MatterControl.Common\Matter CAD.Common.csproj" />
     <ProjectReference Include="..\MatterControl.Printing\MatterControl.Printing.csproj" />
     <ProjectReference Include="..\Sprache\Sprache.csproj" />
