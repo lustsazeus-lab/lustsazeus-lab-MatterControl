@@ -45,7 +45,7 @@ using System.Threading.Tasks;
 
 namespace MatterControlLib.Library.OpenInto
 {
-    public abstract class OpenIntoExecutable
+    public abstract class OpenStlInExe
     {
         private string _pathToExe;
         private string PathToExe
@@ -54,36 +54,24 @@ namespace MatterControlLib.Library.OpenInto
             {
                 if (string.IsNullOrEmpty(_pathToExe))
                 {
-                    // get data from the registry for: Computer\HKEY_CLASSES_ROOT\ Bambu.Studio.1\Shell\Open\Command
-                    RegistryKey key = Registry.ClassesRoot.OpenSubKey(regExKeyName);
-
-                    if (key != null)
-                    {
-                        _pathToExe = key.GetValue("").ToString();
-
-                        var regex = "C:.+.exe";
-                        var match = System.Text.RegularExpressions.Regex.Match(_pathToExe, regex);
-                        _pathToExe = match.Value;
-
-                        key.Close();
-                    }
+                    _pathToExe = GetPathToExe();
                 }
 
                 return _pathToExe;
             }
         }
 
-        public int Priority => 2;
+        public abstract string GetPathToExe();
 
-        protected abstract string regExKeyName { get; }
+        public int Priority => 2;
 
         abstract public string ButtonText { get; }
 
         abstract public string Icon { get; }
 
-        public static IEnumerable<OpenIntoExecutable> GetAvailableOpenWith()
+        public static IEnumerable<OpenStlInExe> GetAvailableOpenWith()
         {
-            yield return new OpenIntoBambuStudio();
+            yield return new OpenStlInBambuStudio();
         }
 
         public static bool FoundInstalledExecutable
@@ -92,7 +80,7 @@ namespace MatterControlLib.Library.OpenInto
             {
                 foreach (var openWith in GetAvailableOpenWith())
                 {
-                    if (openWith.Enabled)
+                    if (!string.IsNullOrEmpty(openWith.PathToExe))
                     {
                         return true;
                     }
@@ -106,7 +94,7 @@ namespace MatterControlLib.Library.OpenInto
         {
             foreach (var openWith in GetAvailableOpenWith())
             {
-                if (!openWith.Enabled)
+                if (string.IsNullOrEmpty(openWith.PathToExe))
                 {
                     continue;
                 }
@@ -134,14 +122,6 @@ namespace MatterControlLib.Library.OpenInto
                             await openWith.Generate(new[] { new InMemoryLibraryItem(selectedItem) }, reporter);
                         });
                 };
-            }
-        }
-
-        public bool Enabled
-        {
-            get
-            {
-                return !string.IsNullOrEmpty(PathToExe);
             }
         }
 

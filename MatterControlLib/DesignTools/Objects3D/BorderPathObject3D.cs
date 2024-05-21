@@ -46,10 +46,8 @@ using MatterHackers.MatterControl.DesignTools.Operations;
 using MatterHackers.MatterControl.PartPreviewWindow;
 using MatterHackers.PolygonMesh.Processors;
 using MatterHackers.VectorMath;
-using Newtonsoft.Json;
 using Polygon = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Polygons = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
-using Matter_CAD_Lib.DesignTools.Obsolete;
 using MatterHackers.Agg;
 using MatterControlLib.DesignTools.Operations.Path;
 
@@ -96,6 +94,12 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
 
         [EnumDisplay(Mode = EnumDisplayAttribute.PresentationMode.Buttons)]
         public CenteringTypes Centering { get; set; } = CenteringTypes.Weighted;
+
+        [Slider(0, 20, Easing.EaseType.Quadratic, snapDistance: .1)]
+        public DoubleOrExpression Radius { get; set; } = 3;
+
+        [Slider(1, 30, Easing.EaseType.Quadratic, snapDistance: 1)]
+        public IntOrExpression Segments { get; set; } = 9;
 
         public bool MeshIsSolidObject => false;
 
@@ -197,29 +201,42 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
                 });
         }
 
-        private static Polygon GetBoundingPolygon(Polygons basePolygons)
+        private static Polygon GetBoundingRectangle(Polygons basePolygons, double expandIn, double radius, int segments)
         {
             var min = new IntPoint(long.MaxValue, long.MaxValue);
             var max = new IntPoint(long.MinValue, long.MinValue);
+
+            // put the radius into the scale of the polygons
+            radius *= 1000;
+            var expand = (int)(expandIn * 1000);
 
             foreach (Polygon polygon in basePolygons)
             {
                 foreach (IntPoint point in polygon)
                 {
-                    min.X = Math.Min(point.X - 10, min.X);
-                    min.Y = Math.Min(point.Y - 10, min.Y);
-                    max.X = Math.Max(point.X + 10, max.X);
-                    max.Y = Math.Max(point.Y + 10, max.Y);
+                    min.X = Math.Min(point.X - expand, min.X);
+                    min.Y = Math.Min(point.Y - expand, min.Y);
+                    max.X = Math.Max(point.X + expand, max.X);
+                    max.Y = Math.Max(point.Y + expand, max.Y);
                 }
             }
 
-            var boundingPoly = new Polygon();
-            boundingPoly.Add(min);
-            boundingPoly.Add(new IntPoint(min.X, max.Y));
-            boundingPoly.Add(max);
-            boundingPoly.Add(new IntPoint(max.X, min.Y));
+            // clamp the radius to the size of the rectangle
+            radius = Math.Min(radius, Math.Min(max.X - min.X, max.Y - min.Y) / 2);
 
-            return boundingPoly;
+            VertexStorage vertexStorage;
+            if (radius > 0)
+            {
+                var roundRect = new RoundedRect(min.X, min.Y, max.X, max.Y, radius);
+                roundRect.NumSegments = segments;
+                vertexStorage = new VertexStorage(roundRect);
+            }
+            else
+            {
+                vertexStorage = new VertexStorage(new RoundedRect(min.X, min.Y, max.X, max.Y, 0));
+            }
+
+            return vertexStorage.CreatePolygons(1)[0];
         }
 
         private Polygon GetBoundingCircle(Polygons basePolygons)
@@ -305,11 +322,14 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
                 && polygonShape.Select(p => p.Count).Sum() > 3)
             {
                 Polygons polysToOffset = new Polygons();
+                var baseSize = BaseSize.Value(this);
 
                 switch (BaseType)
                 {
                     case BaseTypes.Rectangle:
-                        polysToOffset.Add(GetBoundingPolygon(polygonShape));
+                        var radius = Math.Max(0, Radius.Value(this));
+                        var segments = Math.Max(1, Segments.Value(this));
+                        polysToOffset.Add(GetBoundingRectangle(polygonShape, baseSize, radius, segments));
                         break;
 
                     case BaseTypes.Circle:
@@ -325,21 +345,28 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
                 {
                     Polygons basePolygons;
 
-                    var infillAmount = InfillAmount.Value(this);
-                    var baseSize = BaseSize.Value(this);
-                    var joinType = InflatePathObject3D.GetJoinType(Style);
-                    if (BaseType == BaseTypes.Outline
-                        && infillAmount > 0)
+                    if (BaseType == BaseTypes.Rectangle)
                     {
-                        basePolygons = polysToOffset.Offset((baseSize + infillAmount) * scalingForClipper, joinType);
-                        basePolygons = basePolygons.Offset(-infillAmount * scalingForClipper, joinType);
+                        // the polys to offset are already the bounding rectangle
+                        basePolygons = polysToOffset;
                     }
                     else
                     {
-                        basePolygons = polysToOffset.Offset(baseSize * scalingForClipper, joinType);
-                    }
+                        var infillAmount = InfillAmount.Value(this);
+                        var joinType = InflatePathObject3D.GetJoinType(Style);
+                        if (BaseType == BaseTypes.Outline
+                            && infillAmount > 0)
+                        {
+                            basePolygons = polysToOffset.Offset((baseSize + infillAmount) * scalingForClipper, joinType);
+                            basePolygons = basePolygons.Offset(-infillAmount * scalingForClipper, joinType);
+                        }
+                        else
+                        {
+                            basePolygons = polysToOffset.Offset(baseSize * scalingForClipper, joinType);
+                        }
 
-                    basePolygons = Clipper.CleanPolygons(basePolygons, 10);
+                        basePolygons = Clipper.CleanPolygons(basePolygons, 10);
+                    }
 
                     VertexStorage rawVectorShape = basePolygons.PolygonToPathStorage();
                     var vectorShape = new VertexSourceApplyTransform(rawVectorShape, Affine.NewScaling(1.0 / scalingForClipper));
@@ -364,6 +391,9 @@ namespace Matter_CAD_Lib.DesignTools.Objects3D
             changeSet.Add(nameof(InfillAmount), BaseType == BaseTypes.Outline);
             changeSet.Add(nameof(Centering), BaseType == BaseTypes.Circle);
             changeSet.Add(nameof(Style), BaseType == BaseTypes.Outline);
+            // turn on segments and round if Rectangle
+            changeSet.Add(nameof(Segments), BaseType == BaseTypes.Rectangle);
+            changeSet.Add(nameof(Radius), BaseType == BaseTypes.Rectangle);
 
             var vertexSource = GetRawPath();
             var meshSource = this.Descendants<IObject3D>().Where((i) => i.Mesh != null);

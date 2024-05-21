@@ -78,16 +78,8 @@ namespace MatterHackers.MatterControl
 					var scene = sceneContext.Scene;
 					var item = scene.SelectedItem;
 
-					var newChild = item.DeepCopy();
-					var baseObject = new BorderPathObject3D();
-                    baseObject.AddSelectionAsChildren(sceneContext.Scene, sceneContext.Scene.SelectedItem);
-
-					scene.UndoBuffer.AddAndDo(
-						new ReplaceCommand(
-							new List<IObject3D> { item },
-							new List<IObject3D> { baseObject }));
-
-					scene.SelectedItem = baseObject;
+					var borderbject = new BorderPathObject3D();
+                    borderbject.AddSelectionAsChildren(scene, item);
 				},
 				Icon = (theme) => StaticData.Instance.LoadIcon("border_path.png", 16, 16).GrayToColor(theme.TextColor).SetPreMultiply(),
 				HelpTextGetter = () => "A path must be selected".Localize().Stars(),

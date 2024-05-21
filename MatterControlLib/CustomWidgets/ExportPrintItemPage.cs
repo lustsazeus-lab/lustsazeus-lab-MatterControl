@@ -217,7 +217,7 @@ namespace MatterHackers.MatterControl
 				return;
 			}
 
-            if (exportPlugin is OpenIntoExecutable)
+            if (exportPlugin is OpenStlInExe)
             {
                 ApplicationController.Instance.Tasks.Execute(
                     "Saving".Localize() + "...",

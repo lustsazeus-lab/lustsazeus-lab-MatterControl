@@ -1060,6 +1060,9 @@ Translated:Configure Wifi
 English:Confirm Save As
 Translated:Confirm Save As
 
+English:Confirm Update SKU
+Translated:Confirm Update SKU
+
 English:Confirm your new password
 Translated:Confirm your new password
 
@@ -4240,6 +4243,9 @@ Translated:Probe Offset
 English:Probe on conductive pad
 Translated:Probe on conductive pad
 
+English:Process Children
+Translated:Process Children
+
 English:Processing
 Translated:Processing
 
@@ -5155,6 +5161,12 @@ Translated:Skirt
 English:Skirt Height
 Translated:Skirt Height
 
+English:Sku Created
+Translated:Sku Created
+
+English:Sku Created and Supplier set
+Translated:Sku Created and Supplier set
+
 English:Sku Plate
 Translated:Sku Plate
 
@@ -5170,11 +5182,17 @@ Translated:Slice Engine
 English:Slice Height
 Translated:Slice Height
 
+English:Slice Plate
+Translated:Slice Plate
+
 English:Slice Presets Editor
 Translated:Slice Presets Editor
 
 English:Slice Settings
 Translated:Slice Settings
+
+English:Slice the plate.
+Translated:Slice the plate.
 
 English:Slice to Path
 Translated:Slice to Path
@@ -6540,6 +6558,12 @@ Translated:Update Settings
 
 English:Update Settings...
 Translated:Update Settings...
+
+English:Update Sku
+Translated:Update Sku
+
+English:Update the sku in the backend.
+Translated:Update the sku in the backend.
 
 English:Updating a default setting will not change any override that you have applied.
 Translated:Updating a default setting will not change any override that you have applied.

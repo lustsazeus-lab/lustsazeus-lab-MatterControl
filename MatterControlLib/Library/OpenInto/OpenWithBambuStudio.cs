@@ -28,21 +28,48 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 using MatterHackers.Localizations;
-using MatterHackers.MatterControl;
+using Microsoft.Win32;
 
 namespace MatterControlLib.Library.OpenInto
 {
-    public class OpenIntoBambuStudio : OpenIntoExecutable
+    public class OpenStlInBambuStudio : OpenStlInExe
     {
-        public OpenIntoBambuStudio()
+        public OpenStlInBambuStudio()
         {
 
         }
 
-        protected override string regExKeyName => @" Bambu.Studio.1\Shell\Open\Command";
-
         public override string ButtonText => "Bambu Studio".Localize();
 
         public override string Icon => "bambu icon.png";
+
+        public override string GetPathToExe()
+        {
+            // first look for the exe in "C:\Program Files\Bambu Studio\bambu-studio.exe";
+            var expectedPath = @"C:\Program Files\Bambu Studio\bambu-studio.exe";
+            if (System.IO.File.Exists(expectedPath))
+            {
+                return expectedPath;
+            }
+
+            // get data from the registry for: Computer\HKEY_CLASSES_ROOT\ Bambu.Studio.1\Shell\Open\Command
+            var regExKeyName = @" Bambu.Studio.1\Shell\Open\Command";
+            RegistryKey key = Registry.ClassesRoot.OpenSubKey(regExKeyName);
+
+            if (key != null)
+            {
+                var pathToExe = key.GetValue("").ToString();
+
+                var regex = "C:.+.exe";
+                var match = System.Text.RegularExpressions.Regex.Match(pathToExe, regex);
+                pathToExe = match.Value;
+
+                key.Close();
+
+                return pathToExe;
+            }
+
+            return null;
+        }
     }
 }
