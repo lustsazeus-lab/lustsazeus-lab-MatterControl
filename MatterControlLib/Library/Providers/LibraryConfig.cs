@@ -265,6 +265,8 @@ namespace MatterHackers.MatterControl.Library
 
 					if (contentProvider is MeshContentProvider meshContentProvider)
 					{
+						// Show default image immediately while thumbnail is being generated
+						setItemThumbnail(thumbnail);
 						buildThumbnail?.Invoke(meshContentProvider);
 					}
 					else
